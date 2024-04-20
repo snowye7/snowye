@@ -1,0 +1,37 @@
+{
+    "name": "snowye",
+    "version": "0.0.1",
+    "description": "",
+    "main": "dist/cjs/index.js",
+    "types": "dist/cjs/index.d.ts",
+    "type": "module",
+    "bin": "dist/index.js",
+    "scripts": {
+        "start": "tsx src/index.ts",
+        "dev": "father dev",
+        "build": "father build",
+        "build:deps": "father prebundle",
+        "prepublishOnly": "father doctor && npm run build"
+    },
+    "keywords": [],
+    "authors": [],
+    "license": "MIT",
+    "files": [
+        "dist",
+        "compiled"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "devDependencies": {
+        "@types/node": "^20.12.7",
+        "father": "^4.4.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.4.5"
+    },
+    "dependencies": {
+        "@inquirer/prompts": "^5.0.1",
+        "chalk": "^5.3.0",
+        "prettier": "^3.2.5"
+    }
+}
