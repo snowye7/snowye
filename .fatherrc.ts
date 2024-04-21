@@ -1,9 +1,12 @@
 import { defineConfig } from "father"
 
 export default defineConfig({
-    esm: { output: "dist" },
-    cjs: { output: "dist" },
-    prebundle: {
-        deps: {}
-    }
+    cjs: {
+        output: "dist"
+    },
+    targets: {
+        node: 18,
+        chrome: 100
+    },
+    sourcemap: true
 })

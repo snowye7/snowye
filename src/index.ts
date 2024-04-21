@@ -1,36 +1,13 @@
-import { select } from "@inquirer/prompts"
-import chalk from "chalk"
-import { handlePrettier } from "./utils/index"
+#!/usr/bin/env node
+import { getDescription, handlePrettier } from "./utils/index"
+import { Command } from "commander"
 
-const theme = {
-    prefix: "☃️  Snowye ❄️ ",
-    icon: {
-        cursor: "❄️ "
-    }
-}
+const name = "☃️  Snowye ❄️ "
 
-function getDescription(text: string) {
-    return chalk.white.bgBlue.bold(" 🚀 " + text + " 🚀 ")
-}
+const program = new Command()
 
-type Command = "PrettierAll"
+program.name(name)
 
-const choices = [
-    {
-        name: "PrettierAll",
-        value: "PrettierAll",
-        description: getDescription("Prettier格式化所有js,ts,jsx,tsx,css,less,json文件")
-    }
-]
+program.command("prettier").description(getDescription("Prettier格式化所有js,ts,jsx,tsx,css,less,json文件")).action(handlePrettier)
 
-const handleMap: Record<Command, () => Promise<void>> = {
-    PrettierAll: handlePrettier
-}
-
-select({
-    message: "请选择你要执行的命令",
-    theme,
-    choices
-}).then(res => {
-    handleMap[res as Command]()
-})
+program.parse()
