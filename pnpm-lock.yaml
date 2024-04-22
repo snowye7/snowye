@@ -11,9 +11,6 @@ importers:
       '@inquirer/prompts':
         specifier: ^5.0.1
         version: 5.0.1
-      '@types/cli-progress':
-        specifier: ^3.11.5
-        version: 3.11.5
       chalk:
         specifier: 4.1.2
         version: 4.1.2
@@ -23,10 +20,16 @@ importers:
       commander:
         specifier: ^12.0.0
         version: 12.0.0
+      esm:
+        specifier: ^3.2.25
+        version: 3.2.25
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
     devDependencies:
+      '@types/cli-progress':
+        specifier: ^3.11.5
+        version: 3.11.5
       '@types/node':
         specifier: ^20.12.7
         version: 20.12.7
@@ -1257,6 +1260,10 @@ packages:
   eslint-scope@5.1.1:
     resolution: {integrity: sha512-2NxwbF/hZ0KpepYN0cNbo+FN6XoK7GaHlQhgx/hIZl6Va0bF45RQOOwhLIy8lQDbuCiadSLCBnH2CFYquit5bw==}
     engines: {node: '>=8.0.0'}
+
+  esm@3.2.25:
+    resolution: {integrity: sha512-U1suiZ2oDVWv4zPO56S0NcR5QriEahGtdN2OR6FiOG4WJvcjBVFB0qI4+eKoWFH483PKGuLuu6V8Z4T5g63UVA==}
+    engines: {node: '>=6'}
 
   esrecurse@4.3.0:
     resolution: {integrity: sha512-KmfKL3b6G+RXvP8N1vr3Tq1kL/oCFgn2NYXEtqP8/L3pKapUA4G8cFVaoF3SU323CD4XypR/ffioHmkti6/Tag==}
@@ -4200,6 +4207,8 @@ snapshots:
     dependencies:
       esrecurse: 4.3.0
       estraverse: 4.3.0
+
+  esm@3.2.25: {}
 
   esrecurse@4.3.0:
     dependencies:

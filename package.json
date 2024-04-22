@@ -1,6 +1,6 @@
 {
     "name": "snowye",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -24,6 +24,7 @@
         "access": "public"
     },
     "devDependencies": {
+        "@types/cli-progress": "^3.11.5",
         "@types/node": "^20.12.7",
         "father": "^4.4.0",
         "ts-node": "^10.9.2",
@@ -31,10 +32,10 @@
     },
     "dependencies": {
         "@inquirer/prompts": "^5.0.1",
-        "@types/cli-progress": "^3.11.5",
         "chalk": "4.1.2",
         "cli-progress": "^3.12.0",
         "commander": "^12.0.0",
+        "esm": "^3.2.25",
         "prettier": "^3.2.5"
     }
 }
