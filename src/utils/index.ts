@@ -3,13 +3,21 @@ import prettier, { Options } from "prettier"
 import path from "path"
 import chalk from "chalk"
 import cliProgress from "cli-progress"
+import { exec } from "child_process"
+import { input, select } from "@inquirer/prompts"
+
+const theme = {
+    icon: {
+        cursor: "❄️ "
+    }
+}
 
 export function getDescription(text: string) {
     return chalk.white.bgBlue.bold(" 🚀 " + text + " 🚀 ")
 }
 
 function getAllFilesInDirectory(directory: string, filters: string[] = []) {
-    const reg = /\.(js|ts|jsx|tsx|css|less|(?!json.gz|json.br$)json|sass)$/
+    const reg = /\.(js|ts|jsx|tsx|css|less|json|sass)$/
     const files: string[] = []
     const items = readdirSync(directory)
     const ignore = ["node_modules", "dist", ...filters]
@@ -30,7 +38,16 @@ function getAllFilesInDirectory(directory: string, filters: string[] = []) {
     return files
 }
 
-export async function createProgress(name: string, total: number, onProgress: (index: number) => Promise<void>, onError?: (index: number) => void) {
+export type CreateProgressProps = {
+    name: string
+    total: number
+    onProgress: (index: number) => Promise<void>
+    onError?: (index: number) => void
+    type?: cliProgress.Preset
+}
+
+export async function createProgress(props: CreateProgressProps) {
+    const { name, total, onProgress, onError, type = cliProgress.Presets.shades_classic } = props
     const bar = new cliProgress.SingleBar(
         {
             format: `${name} | ${chalk.cyan("{bar}")}  | {percentage}% || ${chalk.greenBright("{value}")}/${chalk.black("{total}")} Chunks`,
@@ -38,29 +55,32 @@ export async function createProgress(name: string, total: number, onProgress: (i
             barIncompleteChar: "\u2591",
             hideCursor: true
         },
-        cliProgress.Presets.shades_classic
+        type
     )
 
     bar.start(total, 0)
 
-    for (let index = 0; index < total; index++) {
-        try {
+    let errorIndex = 0
+    try {
+        for (let index = 0; index < total; index++) {
+            errorIndex = index
             await onProgress(index)
             bar.update(index + 1)
-        } catch (error) {
-            bar.stop()
-            console.log("\n")
-            onError && onError(index)
-            console.error(error)
-            return
         }
+    } catch (error) {
+        bar.stop()
+        console.log("\n")
+        onError && onError(errorIndex)
+        console.error(error)
+        return
     }
     bar.stop()
 }
 
-export const handlePrettier = async (filterFile: string[]) => {
+export const handlePrettier = async () => {
+    const filterFile = await input({ message: "选择过滤的文件夹 空格隔开" })
     const srcDirectory = path.join(process.cwd())
-    const prettierFiles = getAllFilesInDirectory(srcDirectory, filterFile)
+    const prettierFiles = getAllFilesInDirectory(srcDirectory, filterFile.split(" "))
     const prettierConfigFile = await prettier.resolveConfigFile()
     let Config: Options = {
         semi: false,
@@ -72,10 +92,10 @@ export const handlePrettier = async (filterFile: string[]) => {
     if (prettierConfigFile) {
         Config = (await prettier.resolveConfig(prettierConfigFile)) as Options
     }
-    createProgress(
-        "snowye-prettier",
-        prettierFiles.length,
-        async index => {
+    createProgress({
+        name: "snowye-prettier",
+        total: prettierFiles.length,
+        onProgress: async index => {
             const file = prettierFiles[index]
             const source = readFileSync(file, "utf-8")
             const formatted = await prettier.format(source, {
@@ -85,8 +105,36 @@ export const handlePrettier = async (filterFile: string[]) => {
             })
             writeFileSync(file, formatted)
         },
-        index => {
+        onError: index => {
             console.log(" ❌ " + chalk.redBright(`Error: ${prettierFiles[index]} 文件格式化失败`))
         }
-    )
+    })
+}
+
+export const handleNpm = async () => {
+    exec("npm get registry", async (error, stdout) => {
+        if (error) {
+            console.error(`执行出错: ${error}`)
+            return
+        }
+        console.log(" 🐻 " + chalk.yellowBright("当前npm镜像源:" + stdout))
+        const result = await select({
+            message: "选择npm镜像源",
+            theme,
+            choices: [
+                { name: "默认", value: "https://registry.npmjs.org/" },
+                { name: "淘宝", value: "https://registry.npmmirror.com" },
+                { name: "阿里云", value: "https://npm.aliyun.com" },
+                { name: "腾讯云", value: "http://mirrors.cloud.tencent.com/npm/" },
+                { name: "华为云", value: "https://mirrors.huaweicloud.com/repository/npm/" }
+            ]
+        })
+        exec(`npm config set registry ${result}`, async (error, stdout) => {
+            if (error) {
+                console.error(`执行出错: ${error}`)
+                return
+            }
+            console.log(" ✅ " + chalk.greenBright(`设置成功,当前npm镜像源:${result}`))
+        })
+    })
 }
