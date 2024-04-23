@@ -2,10 +2,11 @@
 import { Command } from "commander"
 import { getDescription, handleNpm, handlePrettier } from "./utils/index"
 import chalk from "chalk"
+import packageJson from "../package.json"
 
 const program = new Command()
 
-const version = require("../package.json").version
+const version = packageJson.version
 
 const name = chalk.white.bgCyan.bold(" ☃️  Snowye V " + version + " ")
 
