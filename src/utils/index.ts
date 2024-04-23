@@ -13,7 +13,7 @@ const theme = {
 }
 
 export function getDescription(text: string) {
-    return chalk.white.bgBlue.bold(" 🚀 " + text + " 🚀 ")
+    return chalk.white.bgCyan.bold("🚀 " + text)
 }
 
 function getAllFilesInDirectory(directory: string, filters: string[] = []) {
@@ -50,7 +50,7 @@ export async function createProgress(props: CreateProgressProps) {
     const { name, total, onProgress, onError, type = cliProgress.Presets.shades_classic } = props
     const bar = new cliProgress.SingleBar(
         {
-            format: `${chalk.black.bgGray(" " + name + " ")} | ${chalk.cyan("{bar}")}  | {percentage}% || ${chalk.greenBright("{value}")}/${chalk.blackBright("{total}")} Chunks`,
+            format: `${chalk.white.bgGray(" " + name + " ")} | ${chalk.cyan("{bar}")}  | {percentage}% || ${chalk.greenBright("{value}")}/${chalk.blackBright("{total}")} Chunks`,
             barCompleteChar: "\u2588",
             barIncompleteChar: "\u2591",
             hideCursor: true

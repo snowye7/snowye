@@ -7,7 +7,7 @@ const program = new Command()
 
 const version = require("../package.json").version
 
-const name = chalk.white.bgBlue(" ☃️  Snowye V " + version + " ")
+const name = chalk.white.bgCyan.bold(" ☃️  Snowye V " + version + " ")
 
 program.name(name).version(version, "-v, --version output the version number")
 
