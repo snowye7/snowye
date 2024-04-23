@@ -50,7 +50,7 @@ export async function createProgress(props: CreateProgressProps) {
     const { name, total, onProgress, onError, type = cliProgress.Presets.shades_classic } = props
     const bar = new cliProgress.SingleBar(
         {
-            format: `${name} | ${chalk.cyan("{bar}")}  | {percentage}% || ${chalk.greenBright("{value}")}/${chalk.black("{total}")} Chunks`,
+            format: `${chalk.bgGray.blackBright(" " + name + "")} | ${chalk.cyan("{bar}")}  | {percentage}% || ${chalk.greenBright("{value}")}/${chalk.blackBright("{total}")} Chunks`,
             barCompleteChar: "\u2588",
             barIncompleteChar: "\u2591",
             hideCursor: true
@@ -100,8 +100,7 @@ export const handlePrettier = async () => {
             const source = readFileSync(file, "utf-8")
             const formatted = await prettier.format(source, {
                 ...Config,
-                filepath: file,
-                ignoreGlobs: ["**/*.json.gz"]
+                filepath: file
             })
             writeFileSync(file, formatted)
         },
