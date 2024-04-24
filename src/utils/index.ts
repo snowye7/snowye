@@ -18,7 +18,7 @@ export function getPrimaryText(text: string) {
 }
 
 function getAllFilesInDirectory(directory: string, filters: string[] = []) {
-    const reg = /\.(js|ts|jsx|tsx|css|less|json|sass)$/
+    const reg = /\.(js|ts|jsx|tsx|css|less|json|sass|html)$/
     const files: string[] = []
     const items = readdirSync(directory)
     const ignore = ["node_modules", "dist", ...filters]
