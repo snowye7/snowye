@@ -5,6 +5,7 @@ import chalk from "chalk"
 import cliProgress from "cli-progress"
 import { exec } from "child_process"
 import { input, select } from "@inquirer/prompts"
+import { primary } from "../index"
 
 const theme = {
     icon: {
@@ -12,8 +13,8 @@ const theme = {
     }
 }
 
-export function getDescription(text: string) {
-    return chalk.white.bgCyan.bold("🚀 " + text)
+export function getPrimaryText(text: string) {
+    return chalk.white.bgHex(primary).bold(text)
 }
 
 function getAllFilesInDirectory(directory: string, filters: string[] = []) {
