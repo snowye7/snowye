@@ -1,6 +1,6 @@
 {
     "name": "snowye",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "description": "",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -21,7 +21,8 @@
         "compiled"
     ],
     "publishConfig": {
-        "access": "public"
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
     },
     "devDependencies": {
         "@types/cli-progress": "^3.11.5",
