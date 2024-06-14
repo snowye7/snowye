@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander"
-import { getPrimaryText, handleNpm, handlePrettier } from "./utils/index"
+import { getPrimaryText, handleExport, handleNpm, handlePrettier } from "./utils/index"
 import chalk from "chalk"
 import packageJson from "../package.json"
 
@@ -17,5 +17,7 @@ program.name(name).version(version, "-v, --version output the version number")
 program.command("prettier").description(getPrimaryText("🚀-Prettier格式化所有js,ts,jsx,tsx,css,less,json文件")).action(handlePrettier)
 
 program.command("npm").description(getPrimaryText("🚀-设置npm源")).action(handleNpm)
+
+program.command("export").description(getPrimaryText("🚀-创建统一导出export的index文件(默认ts)")).action(handleExport)
 
 program.parse()
