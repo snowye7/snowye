@@ -1,11 +1,13 @@
-import { readdirSync, statSync, readFileSync, writeFileSync } from "fs"
+import { readdirSync, statSync, readFileSync, writeFileSync, unlinkSync } from "fs"
 import prettier, { Options } from "prettier"
 import path from "path"
 import chalk from "chalk"
 import cliProgress from "cli-progress"
-import { exec } from "child_process"
+import { exec, spawn } from "child_process"
 import { input, select } from "@inquirer/prompts"
 import { primary } from "../index"
+import { readdir, unlink } from "fs/promises"
+import { cwd } from "process"
 
 const theme = {
     icon: {
@@ -13,12 +15,37 @@ const theme = {
     }
 }
 
+enum PackageManager {
+    npm = "npm",
+    yarn = "yarn",
+    pnpm = "pnpm"
+}
+
+enum PackageManagerInstall {
+    npm = "npm install",
+    yarn = "yarn add",
+    pnpm = "pnpm add"
+}
+
+enum BuildTool {
+    rsbuild = "rsbuild",
+    vite = "vite"
+}
+
 export function getPrimaryText(text: string) {
     return chalk.white.bgHex(primary).bold(text)
 }
 
-function getAllFilesInDirectory(directory: string, filters: string[] = []) {
-    const reg = /\.(js|ts|jsx|tsx|css|less|json|sass|html)$/
+export function getErrorText(text: string) {
+    return chalk.white.bgRed.bold("Error") + text
+}
+
+export function getSuccessText(text: string) {
+    return " ✅ " + chalk.greenBright(text)
+}
+
+export function getAllFilesInDirectory(directory: string, filters: string[] = []) {
+    const reg = /\.(js|ts|jsx|tsx|css|less|json|sass|html|cjs|mjs)$/
     const files: string[] = []
     const items = readdirSync(directory)
     const ignore = ["node_modules", "dist", ...filters]
@@ -37,6 +64,57 @@ function getAllFilesInDirectory(directory: string, filters: string[] = []) {
     })
 
     return files
+}
+
+export function readPackageJson(): Record<string, any> {
+    const packageJsonPath = path.join(cwd(), "package.json")
+    const packageJson = readFileSync(packageJsonPath, "utf-8")
+    return JSON.parse(packageJson)
+}
+
+export async function getPackageManager(): Promise<PackageManager> {
+    const dir = await readdir("./")
+    if (dir.includes("yarn.lock")) return PackageManager.yarn
+    if (dir.includes("package-lock.json")) return PackageManager.npm
+    if (dir.includes("pnpm-lock.yaml")) return PackageManager.pnpm
+    return await select({
+        message: "选择包管理器",
+        theme,
+        choices: [
+            {
+                name: "pnpm",
+                value: PackageManager.pnpm
+            },
+            {
+                name: "yarn",
+                value: PackageManager.yarn
+            },
+            {
+                name: "npm",
+                value: PackageManager.npm
+            }
+        ]
+    })
+}
+
+export async function getBuildTool(): Promise<BuildTool> {
+    const packageJson = readPackageJson()
+    if (packageJson.devDependencies.vite) return BuildTool.vite
+    if (packageJson.devDependencies["@rsbuild/core"]) return BuildTool.rsbuild
+    return await select({
+        message: "选择构建工具",
+        theme,
+        choices: [
+            {
+                name: "rsbuild",
+                value: BuildTool.rsbuild
+            },
+            {
+                name: "vite",
+                value: BuildTool.vite
+            }
+        ]
+    })
 }
 
 export type CreateProgressProps = {
@@ -80,7 +158,7 @@ export async function createProgress(props: CreateProgressProps) {
 
 export const handlePrettier = async () => {
     const filterFile = await input({ message: "选择过滤的文件夹 空格隔开" })
-    const srcDirectory = path.join(process.cwd())
+    const srcDirectory = path.join(cwd())
     const prettierFiles = getAllFilesInDirectory(srcDirectory, filterFile.split(" "))
     const prettierConfigFile = await prettier.resolveConfigFile()
     let Config: Options = {
@@ -94,7 +172,7 @@ export const handlePrettier = async () => {
         Config = (await prettier.resolveConfig(prettierConfigFile)) as Options
     }
     createProgress({
-        name: process.cwd().split("\\").pop() ?? "snowye-prettier",
+        name: cwd().split("\\").pop() ?? "snowye-prettier",
         total: prettierFiles.length,
         onProgress: async index => {
             const file = prettierFiles[index]
@@ -106,7 +184,7 @@ export const handlePrettier = async () => {
             writeFileSync(file, formatted)
         },
         onError: index => {
-            console.log(" ❌ " + chalk.redBright(`Error: ${prettierFiles[index]} 文件格式化失败`))
+            console.log(getErrorText(`Error: ${prettierFiles[index]} 文件格式化失败`))
         }
     })
 }
@@ -114,7 +192,7 @@ export const handlePrettier = async () => {
 export const handleNpm = async () => {
     exec("npm get registry", async (error, stdout) => {
         if (error) {
-            console.error(`执行出错: ${error}`)
+            console.log(getErrorText(`执行出错: ${error}`))
             return
         }
         console.log(" 🐻 " + chalk.yellowBright("当前npm镜像源:" + stdout))
@@ -131,17 +209,17 @@ export const handleNpm = async () => {
         })
         exec(`npm config set registry ${result}`, async (error, stdout) => {
             if (error) {
-                console.error(`执行出错: ${error}`)
+                console.log(getErrorText(`执行出错: ${error}`))
                 return
             }
-            console.log(" ✅ " + chalk.greenBright(`设置成功,当前npm镜像源:${result}`))
+            console.log(getSuccessText(`设置成功,当前npm镜像源:${result}`))
         })
     })
 }
 
 export const handleExport = async () => {
     //获取当前目录下的所有文件
-    const files = readdirSync(path.join(process.cwd()))
+    const files = readdirSync(path.join(cwd()))
 
     const indexFiles = ["index.js", "index.ts", "index.jsx", "index.tsx"]
 
@@ -171,4 +249,124 @@ export const handleExport = async () => {
         return
     }
     writeFileSync("index.ts", content)
+    console.log(getSuccessText("创建成功"))
+}
+
+export const handleTwc = async () => {
+    const build = await getBuildTool()
+    //src文件下创建index.css文件 添加tailwindcss的引入
+    writeFileSync("src/index.css", "@tailwind base;\n@tailwind components;\n@tailwind utilities;")
+    exec("npx tailwindcss init -p", (error, stdout) => {
+        if (error) {
+            console.log(getErrorText(`init tailwindcss文件出错: ${error.message}`))
+            return
+        }
+        if (build === "rsbuild") {
+            writeFileSync(
+                "tailwind.config.js",
+                `
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+    content: ["./src/**/*.{js,ts,jsx,tsx}"],
+    theme: {
+        extend: {}
+    },
+    plugins: []
+}
+
+                    `
+            )
+            writeFileSync(
+                "rspack.config.js",
+                `
+module.exports = {
+    // ...
+    module: {
+        rules: [
+            {
+                test: /\.css$/,
+                use: ["postcss-loader"],
+                type: "css"
+            }
+        ]
+    }
+}
+
+                `
+            )
+            console.log(getSuccessText("配置rsbuild Tailwindcss成功"))
+            return
+        }
+        writeFileSync(
+            "tailwind.config.js",
+            `
+/** @type {import('tailwindcss').Config} */
+ module.exports = {
+     content: [
+       "./index.html",
+       "./src/**/*.{js,ts,jsx,tsx}",
+     ],
+     theme: {
+         extend: {}
+     },
+     plugins: []
+ }
+                `
+        )
+        console.log(getSuccessText("配置rsbuild Tailwindcss成功"))
+    })
+}
+
+export const handleTwp = async () => {
+    const prettierConfigFile = await prettier.resolveConfigFile()
+    if (prettierConfigFile) {
+        const isDelete = await select({
+            message: "检测到已有prettier配置文件,是否删除?",
+            theme,
+            choices: [
+                { name: "是", value: true },
+                { name: "否", value: false }
+            ]
+        })
+        if (isDelete) {
+            await unlink(prettierConfigFile)
+        }
+    }
+    const packageManager = await getPackageManager()
+
+    const installCommand = PackageManagerInstall[packageManager].split(" ")
+
+    const child = spawn(installCommand[0], [...installCommand.slice(1), "-D", "prettier", "prettier-plugin-tailwindcss"], {
+        stdio: "pipe",
+        shell: true
+    })
+
+    child.stdout.on("data", data => {
+        process.stdout.write(data)
+    })
+
+    child.stderr.on("data", data => {
+        process.stderr.write(data)
+    })
+
+    child.on("close", code => {
+        writeFileSync(
+            ".prettierrc",
+            `
+{
+    "plugins": ["prettier-plugin-tailwindcss"],
+    "semi": false,
+    "tabWidth": 4,
+    "arrowParens": "avoid",
+    "printWidth": 800,
+    "trailingComma": "none"
+}
+    `
+        )
+        if (code === 0) {
+            console.log(getSuccessText("安装完成"))
+        } else {
+            console.error(getErrorText(`安装过程出错，退出码 ${code}`))
+        }
+    })
 }

@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander"
-import { getPrimaryText, handleExport, handleNpm, handlePrettier } from "./utils/index"
-import chalk from "chalk"
 import packageJson from "../package.json"
+import { getPrimaryText, handleExport, handleNpm, handlePrettier, handleTwc, handleTwp } from "./utils/index"
 
 export const primary = "#2472c8"
 
@@ -18,6 +17,10 @@ program.command("prettier").description(getPrimaryText("🚀-Prettier格式化�
 
 program.command("npm").description(getPrimaryText("🚀-设置npm源")).action(handleNpm)
 
-program.command("export").description(getPrimaryText("🚀-创建统一导出export的index文件(默认ts)")).action(handleExport)
+program.command("export").description(getPrimaryText("🚀-创建统一导出export的桶文件(默认ts)")).action(handleExport)
+
+program.command("tailwindcssConfig").alias("twc").description(getPrimaryText("🚀-一键配置tailwindcss")).action(handleTwc)
+
+program.command("tailwindcssPrettier").alias("twp").description(getPrimaryText("🚀-配置prettier文件 包含tailwindcss格式化插件")).action(handleTwp)
 
 program.parse()
