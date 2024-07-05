@@ -256,6 +256,7 @@ export const handleTwc = async () => {
     const build = await getBuildTool()
     //src文件下创建index.css文件 添加tailwindcss的引入
     writeFileSync("src/index.css", "@tailwind base;\n@tailwind components;\n@tailwind utilities;")
+    console.log(getSuccessText("index.css导入tailwindcss"))
     exec("npx tailwindcss init -p", (error, stdout) => {
         if (error) {
             console.log(getErrorText(`init tailwindcss文件出错: ${error.message}`))
@@ -276,6 +277,7 @@ module.exports = {
 
                     `
             )
+            console.log(getSuccessText("rsbuild 创建Tailwindcss Config文件成功"))
             writeFileSync(
                 "rspack.config.js",
                 `
@@ -313,7 +315,7 @@ module.exports = {
  }
                 `
         )
-        console.log(getSuccessText("配置rsbuild Tailwindcss成功"))
+        console.log(getSuccessText("配置vite Tailwindcss成功"))
     })
 }
 
