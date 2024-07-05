@@ -253,11 +253,12 @@ export const handleExport = async () => {
 }
 
 export const handleTwc = async () => {
+    const packageManager = await getPackageManager()
     const build = await getBuildTool()
     //src文件下创建index.css文件 添加tailwindcss的引入
     writeFileSync("src/index.css", "@tailwind base;\n@tailwind components;\n@tailwind utilities;")
     console.log(getSuccessText("index.css导入tailwindcss"))
-    exec("npx tailwindcss init -p", (error, stdout) => {
+    exec("npx tailwindcss init -p", async (error, stdout) => {
         if (error) {
             console.log(getErrorText(`init tailwindcss文件出错: ${error.message}`))
             return
@@ -297,25 +298,54 @@ module.exports = {
                 `
             )
             console.log(getSuccessText("配置rsbuild Tailwindcss成功"))
-            return
-        }
-        writeFileSync(
-            "tailwind.config.js",
-            `
-/** @type {import('tailwindcss').Config} */
- module.exports = {
-     content: [
-       "./index.html",
-       "./src/**/*.{js,ts,jsx,tsx}",
-     ],
-     theme: {
-         extend: {}
-     },
-     plugins: []
- }
+        } else {
+            writeFileSync(
+                "tailwind.config.js",
                 `
-        )
-        console.log(getSuccessText("配置vite Tailwindcss成功"))
+    /** @type {import('tailwindcss').Config} */
+     module.exports = {
+         content: [
+           "./index.html",
+           "./src/**/*.{js,ts,jsx,tsx}",
+         ],
+         theme: {
+             extend: {}
+         },
+         plugins: []
+     }
+                    `
+            )
+            console.log(getSuccessText("配置vite Tailwindcss成功"))
+        }
+
+        const installCommand = PackageManagerInstall[packageManager].split(" ")
+
+        const arr = [...installCommand.slice(1), "-D", "tailwindcss", "postcss", "autoprefixer"]
+
+        if (build === "rsbuild") {
+            arr.push("postcss-loader")
+        }
+
+        const child = spawn(installCommand[0], arr, {
+            stdio: "pipe",
+            shell: true
+        })
+
+        child.stdout.on("data", data => {
+            process.stdout.write(data)
+        })
+
+        child.stderr.on("data", data => {
+            process.stderr.write(data)
+        })
+
+        child.on("close", code => {
+            if (code === 0) {
+                console.log(getSuccessText("安装完成"))
+            } else {
+                console.error(getErrorText(`安装过程出错，退出码 ${code}`))
+            }
+        })
     })
 }
 
