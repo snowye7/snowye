@@ -421,23 +421,26 @@ export const handleApf = async () => {
         pageSize: addFiles.length
     })
 
-    if(!result.length) {
+    if (!result.length) {
         console.log(getWarningText("未选择文件夹"))
         return
     }
 
     const files = await readdir("./src")
 
-    if (!result.filter(it => files.includes(it)).length) {
+    const add = result.filter(it => !files.includes(it))
+
+    if (!add.length) {
         console.log(getWarningText("文件夹都已存在"))
         return
     }
 
-    console.log(getWarningText(addFiles.join(",") + "文件夹已存在,不会继续添加"))
+    const hasFiles = result.filter(it => files.includes(it))
 
-    console.log("正在添加文件...")
-    
-    const add = result.filter(it => !files.includes(it))
+    console.log(getWarningText(hasFiles.join(",") + "文件夹已存在,不会继续添加"))
+
+    console.log(`正在添加${add.join("、")}`)
+
     for (let i = 0; i < add.length; i++) {
         const file = result[i]
         const _ = path.join(cwd(), "src", file)
@@ -445,6 +448,7 @@ export const handleApf = async () => {
         const mkdirResult = await mkdir(_, { recursive: true })
         if (!mkdirResult) {
             console.log(getErrorText(`${file}文件夹创建失败`))
+            continue
         }
         console.log(getSuccessText(`${file}文件夹创建成功`))
     }
