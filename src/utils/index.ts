@@ -1,13 +1,14 @@
-import { readdirSync, statSync, readFileSync, writeFileSync, unlinkSync } from "fs"
+import { readdirSync, statSync, readFileSync, writeFileSync, unlinkSync, fsync } from "fs"
 import prettier, { Options } from "prettier"
 import path from "path"
 import chalk from "chalk"
 import cliProgress from "cli-progress"
 import { exec, spawn } from "child_process"
-import { input, select } from "@inquirer/prompts"
+import { checkbox, input, select } from "@inquirer/prompts"
 import { primary } from "../index"
 import { readdir, unlink } from "fs/promises"
 import { cwd } from "process"
+import { mkdir } from "fs/promises"
 
 const theme = {
     icon: {
@@ -37,11 +38,15 @@ export function getPrimaryText(text: string) {
 }
 
 export function getErrorText(text: string) {
-    return chalk.white.bgRed.bold("Error") + text
+    return chalk.white.bgRed(" Error ") + " " + chalk.bold(text)
 }
 
 export function getSuccessText(text: string) {
     return " ✅ " + chalk.greenBright(text)
+}
+
+export function getWarningText(text: string) {
+    return " ⚠️ " + chalk.yellowBright(text)
 }
 
 export function getAllFilesInDirectory(directory: string, filters: string[] = []) {
@@ -278,7 +283,7 @@ module.exports = {
 
                     `
             )
-            console.log(getSuccessText("rsbuild 创建Tailwindcss Config文件成功"))
+            console.log(getSuccessText("rsbuild 创建tailwindcss config文件成功"))
             writeFileSync(
                 "rspack.config.js",
                 `
@@ -297,7 +302,7 @@ module.exports = {
 
                 `
             )
-            console.log(getSuccessText("配置rsbuild Tailwindcss成功"))
+            console.log(getSuccessText("配置rsbuild tailwindcss成功"))
         } else {
             writeFileSync(
                 "tailwind.config.js",
@@ -317,6 +322,8 @@ module.exports = {
             )
             console.log(getSuccessText("配置vite Tailwindcss成功"))
         }
+
+        console.log("正在安装依赖")
 
         const installCommand = PackageManagerInstall[packageManager].split(" ")
 
@@ -401,4 +408,44 @@ export const handleTwp = async () => {
             console.error(getErrorText(`安装过程出错，退出码 ${code}`))
         }
     })
+}
+
+export const handleApf = async () => {
+    const addFiles = ["api", "assets", "components", "hooks", "pages", "utils", "store"]
+
+    const result = await checkbox({
+        message: "选择添加的文件夹",
+        choices: addFiles.map(it => {
+            return { name: it, value: it, checked: true }
+        }),
+        pageSize: addFiles.length
+    })
+
+    if(!result.length) {
+        console.log(getWarningText("未选择文件夹"))
+        return
+    }
+
+    const files = await readdir("./src")
+
+    if (!result.filter(it => files.includes(it)).length) {
+        console.log(getWarningText("文件夹都已存在"))
+        return
+    }
+
+    console.log(getWarningText(addFiles.join(",") + "文件夹已存在,不会继续添加"))
+
+    console.log("正在添加文件...")
+    
+    const add = result.filter(it => !files.includes(it))
+    for (let i = 0; i < add.length; i++) {
+        const file = result[i]
+        const _ = path.join(cwd(), "src", file)
+        //创建文件夹
+        const mkdirResult = await mkdir(_, { recursive: true })
+        if (!mkdirResult) {
+            console.log(getErrorText(`${file}文件夹创建失败`))
+        }
+        console.log(getSuccessText(`${file}文件夹创建成功`))
+    }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander"
 import packageJson from "../package.json"
-import { getPrimaryText, handleExport, handleNpm, handlePrettier, handleTwc, handleTwp } from "./utils/index"
+import { getPrimaryText, handleApf, handleExport, handleNpm, handlePrettier, handleTwc, handleTwp } from "./utils/index"
 
 export const primary = "#2472c8"
 
@@ -22,5 +22,7 @@ program.command("export").description(getPrimaryText("🚀-创建统一导出exp
 program.command("tailwindcssConfig").alias("twc").description(getPrimaryText("🚀-一键配置tailwindcss")).action(handleTwc)
 
 program.command("tailwindcssPrettier").alias("twp").description(getPrimaryText("🚀-配置prettier文件 包含tailwindcss格式化插件")).action(handleTwp)
+
+program.command("addProjectFiles").alias("apf").description(getPrimaryText("🚀-添加项目文件")).action(handleApf)
 
 program.parse()
