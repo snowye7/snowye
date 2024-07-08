@@ -437,15 +437,17 @@ export const handleApf = async () => {
 
     const hasFiles = result.filter(it => files.includes(it))
 
-    console.log(getWarningText(hasFiles.join(",") + "文件夹已存在,不会继续添加"))
+    !!hasFiles.length && console.log(getWarningText(hasFiles.join(",") + "文件夹已存在,不会继续添加"))
 
     console.log(`正在添加${add.join("、")}`)
 
     for (let i = 0; i < add.length; i++) {
-        const file = result[i]
+        const file = add[i]
         const _ = path.join(cwd(), "src", file)
         //创建文件夹
         const mkdirResult = await mkdir(_, { recursive: true })
+        //给文件夹添加index.ts文件
+        writeFileSync(path.join(_, "index.ts"), "")
         if (!mkdirResult) {
             console.log(getErrorText(`${file}文件夹创建失败`))
             continue
