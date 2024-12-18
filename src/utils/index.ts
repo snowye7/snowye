@@ -169,7 +169,7 @@ export async function createProgress(props: CreateProgressProps) {
 
 export const handlePrettier = async () => {
     const filterFile = await input({ message: "选择过滤的文件夹 空格隔开" })
-    const srcDirectory = path.join(import.meta.dirname)
+    const srcDirectory = path.join(cwd())
     const prettierFiles = getAllFilesInDirectory(srcDirectory, filterFile.split(" "))
     const prettierConfigFile = await prettier.resolveConfigFile()
     let Config: Options = {
@@ -183,7 +183,7 @@ export const handlePrettier = async () => {
         Config = (await prettier.resolveConfig(prettierConfigFile)) as Options
     }
     createProgress({
-        name: import.meta.dirname.split("\\").pop() ?? "snowye-prettier",
+        name: cwd().split("\\").pop() ?? "snowye-prettier",
         total: prettierFiles.length,
         onProgress: async index => {
             const file = prettierFiles[index]
@@ -469,7 +469,7 @@ export const handleApf = async () => {
 
     for (let i = 0; i < add.length; i++) {
         const file = add[i]
-        const _ = path.join(import.meta.dirname, "src", file)
+        const _ = path.join(cwd(), "src", file)
         //创建文件夹
         const mkdirResult = await mkdir(_, { recursive: true })
         //给文件夹添加index.ts文件
