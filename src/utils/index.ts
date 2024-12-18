@@ -19,12 +19,14 @@ enum PackageManager {
     npm = "npm",
     yarn = "yarn",
     pnpm = "pnpm",
+    bun = "bun",
 }
 
 enum PackageManagerInstall {
     npm = "npm install",
     yarn = "yarn add",
     pnpm = "pnpm add",
+    bun = "bun install",
 }
 
 enum BuildTool {
@@ -71,7 +73,7 @@ export function getAllFilesInDirectory(directory: string, filters: string[] = []
 }
 
 export function readPackageJson(): Record<string, any> {
-    const packageJsonPath = path.join(import.meta.dirname, "package.json")
+    const packageJsonPath = path.join(cwd(), "package.json")
     const packageJson = readFileSync(packageJsonPath, "utf-8")
     return JSON.parse(packageJson)
 }
@@ -81,6 +83,7 @@ export async function getPackageManager(): Promise<PackageManager> {
     if (dir.includes("yarn.lock")) return PackageManager.yarn
     if (dir.includes("package-lock.json")) return PackageManager.npm
     if (dir.includes("pnpm-lock.yaml")) return PackageManager.pnpm
+    if (dir.includes("bun.lockb")) return PackageManager.bun
     return await select({
         message: "选择包管理器",
         theme,
@@ -92,6 +95,10 @@ export async function getPackageManager(): Promise<PackageManager> {
             {
                 name: "yarn",
                 value: PackageManager.yarn,
+            },
+            {
+                name: "bun",
+                value: PackageManager.bun,
             },
             {
                 name: "npm",
@@ -261,8 +268,8 @@ export const handleTwc = async () => {
     const build = await getBuildTool()
     //src文件下创建index.css文件 添加tailwindcss的引入
     writeFileSync("src/index.css", "@tailwind base;\n@tailwind components;\n@tailwind utilities;")
-    console.log(getSuccessText("index.css导入tailwindcss"))
-    exec("npx tailwindcss init -p", async (error, stdout) => {
+    console.log(getSuccessText("index.css导入tailwindcss变量成功"))
+    exec("npx tailwindcss init -p", async error => {
         if (error) {
             console.log(getErrorText(`init tailwindcss文件出错: ${error.message}`))
             return
@@ -302,8 +309,9 @@ module.exports = {
                 `
             )
             writeFileSync(
-                "index.tsx",
+                "src/index.tsx",
                 `
+import React from "react"
 import ReactDOM from "react-dom/client"
 import App from "./App"
 import "./index.css"
@@ -311,7 +319,11 @@ import "./index.css"
 const rootEl = document.getElementById("root")
 if (rootEl) {
     const root = ReactDOM.createRoot(rootEl)
-    root.render(<App />)
+    root.render(
+        <React.StrictMode>
+            <App />
+        </React.StrictMode>
+    )
 }
 
                 `
