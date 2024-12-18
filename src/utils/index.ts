@@ -12,25 +12,25 @@ import { mkdir } from "fs/promises"
 
 const theme = {
     icon: {
-        cursor: "❄️ "
-    }
+        cursor: "❄️ ",
+    },
 }
 
 enum PackageManager {
     npm = "npm",
     yarn = "yarn",
-    pnpm = "pnpm"
+    pnpm = "pnpm",
 }
 
 enum PackageManagerInstall {
     npm = "npm install",
     yarn = "yarn add",
-    pnpm = "pnpm add"
+    pnpm = "pnpm add",
 }
 
 enum BuildTool {
     rsbuild = "rsbuild",
-    vite = "vite"
+    vite = "vite",
 }
 
 export function getPrimaryText(text: string) {
@@ -72,7 +72,7 @@ export function getAllFilesInDirectory(directory: string, filters: string[] = []
 }
 
 export function readPackageJson(): Record<string, any> {
-    const packageJsonPath = path.join(cwd(), "package.json")
+    const packageJsonPath = path.join(import.meta.dirname, "package.json")
     const packageJson = readFileSync(packageJsonPath, "utf-8")
     return JSON.parse(packageJson)
 }
@@ -88,17 +88,17 @@ export async function getPackageManager(): Promise<PackageManager> {
         choices: [
             {
                 name: "pnpm",
-                value: PackageManager.pnpm
+                value: PackageManager.pnpm,
             },
             {
                 name: "yarn",
-                value: PackageManager.yarn
+                value: PackageManager.yarn,
             },
             {
                 name: "npm",
-                value: PackageManager.npm
-            }
-        ]
+                value: PackageManager.npm,
+            },
+        ],
     })
 }
 
@@ -112,13 +112,13 @@ export async function getBuildTool(): Promise<BuildTool> {
         choices: [
             {
                 name: "rsbuild",
-                value: BuildTool.rsbuild
+                value: BuildTool.rsbuild,
             },
             {
                 name: "vite",
-                value: BuildTool.vite
-            }
-        ]
+                value: BuildTool.vite,
+            },
+        ],
     })
 }
 
@@ -137,7 +137,7 @@ export async function createProgress(props: CreateProgressProps) {
             format: `${chalk.white.bgGray(" " + name + " ")} | ${chalk.cyan("{bar}")}  | {percentage}% || ${chalk.greenBright("{value}")}/${chalk.blackBright("{total}")} Chunks`,
             barCompleteChar: "\u2588",
             barIncompleteChar: "\u2591",
-            hideCursor: true
+            hideCursor: true,
         },
         type
     )
@@ -163,7 +163,7 @@ export async function createProgress(props: CreateProgressProps) {
 
 export const handlePrettier = async () => {
     const filterFile = await input({ message: "选择过滤的文件夹 空格隔开" })
-    const srcDirectory = path.join(cwd())
+    const srcDirectory = path.join(import.meta.dirname)
     const prettierFiles = getAllFilesInDirectory(srcDirectory, filterFile.split(" "))
     const prettierConfigFile = await prettier.resolveConfigFile()
     let Config: Options = {
@@ -171,26 +171,26 @@ export const handlePrettier = async () => {
         tabWidth: 4,
         arrowParens: "avoid",
         printWidth: 800,
-        trailingComma: "none"
+        trailingComma: "none",
     }
     if (prettierConfigFile) {
         Config = (await prettier.resolveConfig(prettierConfigFile)) as Options
     }
     createProgress({
-        name: cwd().split("\\").pop() ?? "snowye-prettier",
+        name: import.meta.dirname.split("\\").pop() ?? "snowye-prettier",
         total: prettierFiles.length,
         onProgress: async index => {
             const file = prettierFiles[index]
             const source = readFileSync(file, "utf-8")
             const formatted = await prettier.format(source, {
                 ...Config,
-                filepath: file
+                filepath: file,
             })
             writeFileSync(file, formatted)
         },
         onError: index => {
             console.log(getErrorText(`Error: ${prettierFiles[index]} 文件格式化失败`))
-        }
+        },
     })
 }
 
@@ -209,8 +209,8 @@ export const handleNpm = async () => {
                 { name: "淘宝", value: "https://registry.npmmirror.com" },
                 { name: "阿里云", value: "https://npm.aliyun.com" },
                 { name: "腾讯云", value: "http://mirrors.cloud.tencent.com/npm/" },
-                { name: "华为云", value: "https://mirrors.huaweicloud.com/repository/npm/" }
-            ]
+                { name: "华为云", value: "https://mirrors.huaweicloud.com/repository/npm/" },
+            ],
         })
         exec(`npm config set registry ${result}`, async (error, stdout) => {
             if (error) {
@@ -242,8 +242,8 @@ export const handleExport = async () => {
             theme,
             choices: [
                 { name: "否", value: false },
-                { name: "是", value: true }
-            ]
+                { name: "是", value: true },
+            ],
         })
         if (isRemove) {
             writeFileSync(indexFile, content)
@@ -302,6 +302,21 @@ module.exports = {
 
                 `
             )
+            writeFileSync(
+                "index.tsx",
+                `
+import ReactDOM from "react-dom/client"
+import App from "./App"
+import "./index.css"
+
+const rootEl = document.getElementById("root")
+if (rootEl) {
+    const root = ReactDOM.createRoot(rootEl)
+    root.render(<App />)
+}
+
+                `
+            )
             console.log(getSuccessText("配置rsbuild tailwindcss成功"))
         } else {
             writeFileSync(
@@ -335,7 +350,7 @@ module.exports = {
 
         const child = spawn(installCommand[0], arr, {
             stdio: "pipe",
-            shell: true
+            shell: true,
         })
 
         child.stdout.on("data", data => {
@@ -364,8 +379,8 @@ export const handleTwp = async () => {
             theme,
             choices: [
                 { name: "是", value: true },
-                { name: "否", value: false }
-            ]
+                { name: "否", value: false },
+            ],
         })
         if (isDelete) {
             await unlink(prettierConfigFile)
@@ -377,7 +392,7 @@ export const handleTwp = async () => {
 
     const child = spawn(installCommand[0], [...installCommand.slice(1), "-D", "prettier", "prettier-plugin-tailwindcss"], {
         stdio: "pipe",
-        shell: true
+        shell: true,
     })
 
     child.stdout.on("data", data => {
@@ -418,7 +433,7 @@ export const handleApf = async () => {
         choices: addFiles.map(it => {
             return { name: it, value: it, checked: true }
         }),
-        pageSize: addFiles.length
+        pageSize: addFiles.length,
     })
 
     if (!result.length) {
@@ -443,7 +458,7 @@ export const handleApf = async () => {
 
     for (let i = 0; i < add.length; i++) {
         const file = add[i]
-        const _ = path.join(cwd(), "src", file)
+        const _ = path.join(import.meta.dirname, "src", file)
         //创建文件夹
         const mkdirResult = await mkdir(_, { recursive: true })
         //给文件夹添加index.ts文件
