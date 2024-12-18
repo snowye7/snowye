@@ -1,35 +1,33 @@
-import { checkbox, input, select } from "@inquirer/prompts"
+import { select } from "@inquirer/prompts"
 import chalk from "chalk"
-import { exec, spawn } from "child_process"
 import cliProgress from "cli-progress"
-import { readdirSync, readFileSync, statSync, writeFileSync } from "fs"
-import { mkdir, readdir, unlink } from "fs/promises"
+import { readdirSync, readFileSync, statSync } from "fs"
+import { readdir } from "fs/promises"
 import path from "path"
-import prettier, { Options } from "prettier"
 import { cwd } from "process"
 import { primary } from "../index"
 
-const theme = {
+export const theme = {
     icon: {
         cursor: "❄️ ",
     },
 }
 
-enum PackageManager {
+export enum PackageManager {
     npm = "npm",
     yarn = "yarn",
     pnpm = "pnpm",
     bun = "bun",
 }
 
-enum PackageManagerInstall {
+export enum PackageManagerInstall {
     npm = "npm install",
     yarn = "yarn add",
     pnpm = "pnpm add",
     bun = "bun install",
 }
 
-enum BuildTool {
+export enum BuildTool {
     rsbuild = "rsbuild",
     vite = "vite",
 }
@@ -165,319 +163,4 @@ export async function createProgress(props: CreateProgressProps) {
         return
     }
     bar.stop()
-}
-
-export const handlePrettier = async () => {
-    const filterFile = await input({ message: "选择过滤的文件夹 空格隔开" })
-    const srcDirectory = path.join(cwd())
-    const prettierFiles = getAllFilesInDirectory(srcDirectory, filterFile.split(" "))
-    const prettierConfigFile = await prettier.resolveConfigFile()
-    let Config: Options = {
-        semi: false,
-        tabWidth: 4,
-        arrowParens: "avoid",
-        printWidth: 800,
-        trailingComma: "none",
-    }
-    if (prettierConfigFile) {
-        Config = (await prettier.resolveConfig(prettierConfigFile)) as Options
-    }
-    createProgress({
-        name: cwd().split("\\").pop() ?? "snowye-prettier",
-        total: prettierFiles.length,
-        onProgress: async index => {
-            const file = prettierFiles[index]
-            const source = readFileSync(file, "utf-8")
-            const formatted = await prettier.format(source, {
-                ...Config,
-                filepath: file,
-            })
-            writeFileSync(file, formatted)
-        },
-        onError: index => {
-            console.log(getErrorText(`Error: ${prettierFiles[index]} 文件格式化失败`))
-        },
-    })
-}
-
-export const handleNpm = async () => {
-    exec("npm get registry", async (error, stdout) => {
-        if (error) {
-            console.log(getErrorText(`执行出错: ${error}`))
-            return
-        }
-        console.log(" 🐻 " + chalk.yellowBright("当前npm镜像源:" + stdout))
-        const result = await select({
-            message: "选择npm镜像源",
-            theme,
-            choices: [
-                { name: "默认", value: "https://registry.npmjs.org/" },
-                { name: "淘宝", value: "https://registry.npmmirror.com" },
-                { name: "阿里云", value: "https://npm.aliyun.com" },
-                { name: "腾讯云", value: "http://mirrors.cloud.tencent.com/npm/" },
-                { name: "华为云", value: "https://mirrors.huaweicloud.com/repository/npm/" },
-            ],
-        })
-        exec(`npm config set registry ${result}`, async error => {
-            if (error) {
-                console.log(getErrorText(`执行出错: ${error}`))
-                return
-            }
-            console.log(getSuccessText(`设置成功,当前npm镜像源:${result}`))
-        })
-    })
-}
-
-export const handleExport = async () => {
-    //获取当前目录下的所有文件
-    const files = readdirSync(path.join(cwd()))
-
-    const indexFiles = ["index.js", "index.ts", "index.jsx", "index.tsx"]
-
-    const indexFile = indexFiles.find(item => files.includes(item))
-
-    const exportFiles = files.filter(item => !indexFiles.includes(item))
-
-    const content = exportFiles.map(item => `export * from "./${item}"`).join("\n")
-
-    if (indexFile) {
-        // 读取index文件内容
-
-        const isRemove = await select({
-            message: "检测到已有index文件,是否清空?",
-            theme,
-            choices: [
-                { name: "否", value: false },
-                { name: "是", value: true },
-            ],
-        })
-        if (isRemove) {
-            writeFileSync(indexFile, content)
-            return
-        }
-        const indexContent = readFileSync(indexFile, "utf-8")
-        writeFileSync(indexFile, indexContent + "\n" + content)
-        return
-    }
-    writeFileSync("index.ts", content)
-    console.log(getSuccessText("创建成功"))
-}
-
-export const handleTwc = async () => {
-    const packageManager = await getPackageManager()
-    const build = await getBuildTool()
-    //src文件下创建index.css文件 添加tailwindcss的引入
-    writeFileSync("src/index.css", "@tailwind base;\n@tailwind components;\n@tailwind utilities;")
-    console.log(getSuccessText("index.css导入tailwindcss变量成功"))
-    exec("npx tailwindcss init -p", async error => {
-        if (error) {
-            console.log(getErrorText(`init tailwindcss文件出错: ${error.message}`))
-            return
-        }
-        if (build === "rsbuild") {
-            writeFileSync(
-                "tailwind.config.js",
-                `
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-    content: ["./src/**/*.{js,ts,jsx,tsx}"],
-    theme: {
-        extend: {}
-    },
-    plugins: []
-}
-
-                    `
-            )
-            console.log(getSuccessText("rsbuild 创建tailwindcss config文件成功"))
-            writeFileSync(
-                "rspack.config.js",
-                `
-module.exports = {
-    // ...
-    module: {
-        rules: [
-            {
-                test: /\.css$/,
-                use: ["postcss-loader"],
-                type: "css"
-            }
-        ]
-    }
-}
-
-                `
-            )
-            writeFileSync(
-                "src/index.tsx",
-                `
-import React from "react"
-import ReactDOM from "react-dom/client"
-import App from "./App"
-import "./index.css"
-
-const rootEl = document.getElementById("root")
-if (rootEl) {
-    const root = ReactDOM.createRoot(rootEl)
-    root.render(
-        <React.StrictMode>
-            <App />
-        </React.StrictMode>
-    )
-}
-
-                `
-            )
-            console.log(getSuccessText("配置rsbuild tailwindcss成功"))
-        } else {
-            writeFileSync(
-                "tailwind.config.js",
-                `
-    /** @type {import('tailwindcss').Config} */
-     module.exports = {
-         content: [
-           "./index.html",
-           "./src/**/*.{js,ts,jsx,tsx}",
-         ],
-         theme: {
-             extend: {}
-         },
-         plugins: []
-     }
-                    `
-            )
-            console.log(getSuccessText("配置vite Tailwindcss成功"))
-        }
-
-        console.log("正在安装依赖")
-
-        const installCommand = PackageManagerInstall[packageManager].split(" ")
-
-        const arr = [...installCommand.slice(1), "-D", "tailwindcss", "postcss", "autoprefixer"]
-
-        if (build === "rsbuild") {
-            arr.push("postcss-loader")
-        }
-
-        const child = spawn(installCommand[0], arr, {
-            stdio: "pipe",
-            shell: true,
-        })
-
-        child.stdout.on("data", data => {
-            process.stdout.write(data)
-        })
-
-        child.stderr.on("data", data => {
-            process.stderr.write(data)
-        })
-
-        child.on("close", code => {
-            if (code === 0) {
-                console.log(getSuccessText("安装完成"))
-            } else {
-                console.error(getErrorText(`安装过程出错，退出码 ${code}`))
-            }
-        })
-    })
-}
-
-export const handleTwp = async () => {
-    const prettierConfigFile = await prettier.resolveConfigFile()
-    if (prettierConfigFile) {
-        const isDelete = await select({
-            message: "检测到已有prettier配置文件,是否删除?",
-            theme,
-            choices: [
-                { name: "是", value: true },
-                { name: "否", value: false },
-            ],
-        })
-        if (isDelete) {
-            await unlink(prettierConfigFile)
-        }
-    }
-    const packageManager = await getPackageManager()
-
-    const installCommand = PackageManagerInstall[packageManager].split(" ")
-
-    const child = spawn(installCommand[0], [...installCommand.slice(1), "-D", "prettier", "prettier-plugin-tailwindcss"], {
-        stdio: "pipe",
-        shell: true,
-    })
-
-    child.stdout.on("data", data => {
-        process.stdout.write(data)
-    })
-
-    child.stderr.on("data", data => {
-        process.stderr.write(data)
-    })
-
-    child.on("close", code => {
-        writeFileSync(
-            ".prettierrc",
-            `
-{
-    "plugins": ["prettier-plugin-tailwindcss"],
-    "semi": false,
-    "tabWidth": 4,
-    "arrowParens": "avoid",
-    "printWidth": 800,
-    "trailingComma": "none"
-}
-    `
-        )
-        if (code === 0) {
-            console.log(getSuccessText("安装完成"))
-        } else {
-            console.error(getErrorText(`安装过程出错，退出码 ${code}`))
-        }
-    })
-}
-
-export const handleApf = async () => {
-    const addFiles = ["api", "assets", "components", "hooks", "pages", "utils", "store"]
-
-    const result = await checkbox({
-        message: "选择添加的文件夹",
-        choices: addFiles.map(it => {
-            return { name: it, value: it, checked: true }
-        }),
-        pageSize: addFiles.length,
-    })
-
-    if (!result.length) {
-        console.log(getWarningText("未选择文件夹"))
-        return
-    }
-
-    const files = await readdir("./src")
-
-    const add = result.filter(it => !files.includes(it))
-
-    if (!add.length) {
-        console.log(getWarningText("文件夹都已存在"))
-        return
-    }
-
-    const hasFiles = result.filter(it => files.includes(it))
-
-    !!hasFiles.length && console.log(getWarningText(hasFiles.join(",") + "文件夹已存在,不会继续添加"))
-
-    console.log(`正在添加${add.join("、")}`)
-
-    for (let i = 0; i < add.length; i++) {
-        const file = add[i]
-        const _ = path.join(cwd(), "src", file)
-        //创建文件夹
-        const mkdirResult = await mkdir(_, { recursive: true })
-        //给文件夹添加index.ts文件
-        writeFileSync(path.join(_, "index.ts"), "")
-        if (!mkdirResult) {
-            console.log(getErrorText(`${file}文件夹创建失败`))
-            continue
-        }
-        console.log(getSuccessText(`${file}文件夹创建成功`))
-    }
 }

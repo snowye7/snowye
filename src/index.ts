@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 import { Command } from "commander"
 import packageJson from "../package.json"
-import { getPrimaryText, handleApf, handleExport, handleNpm, handlePrettier, handleTwc, handleTwp } from "./utils/index"
+import { getPrimaryText } from "./utils/index"
+import { handleNpm } from "./utils/handleNpm"
+import { handleTwc } from "./utils/handleTwc"
+import { handleExport } from "./utils/handleExport"
+import { handlePrettier } from "./utils/handlePrettier"
+import { handleTwp } from "./utils/handleTwp"
+import { handleApf } from "./utils/handleApf"
 
 export const primary = "#2472c8"
 
