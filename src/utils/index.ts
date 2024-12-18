@@ -1,14 +1,13 @@
-import { readdirSync, statSync, readFileSync, writeFileSync, unlinkSync, fsync } from "fs"
-import prettier, { Options } from "prettier"
-import path from "path"
-import chalk from "chalk"
-import cliProgress from "cli-progress"
-import { exec, spawn } from "child_process"
 import { checkbox, input, select } from "@inquirer/prompts"
-import { primary } from "../index"
-import { readdir, unlink } from "fs/promises"
+import chalk from "chalk"
+import { exec, spawn } from "child_process"
+import cliProgress from "cli-progress"
+import { readdirSync, readFileSync, statSync, writeFileSync } from "fs"
+import { mkdir, readdir, unlink } from "fs/promises"
+import path from "path"
+import prettier, { Options } from "prettier"
 import { cwd } from "process"
-import { mkdir } from "fs/promises"
+import { primary } from "../index"
 
 const theme = {
     icon: {
