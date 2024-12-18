@@ -218,7 +218,7 @@ export const handleNpm = async () => {
                 { name: "华为云", value: "https://mirrors.huaweicloud.com/repository/npm/" },
             ],
         })
-        exec(`npm config set registry ${result}`, async (error, stdout) => {
+        exec(`npm config set registry ${result}`, async error => {
             if (error) {
                 console.log(getErrorText(`执行出错: ${error}`))
                 return
