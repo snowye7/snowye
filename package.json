@@ -11,7 +11,7 @@
         "dev": "father dev",
         "build": "father build",
         "build:deps": "father prebundle",
-        "prepublishOnly": "father doctor && npm run build"
+        "prepublishOnly": "father doctor && npm ru  n build"
     },
     "keywords": [],
     "authors": [],

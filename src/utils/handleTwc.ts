@@ -9,7 +9,7 @@ export const handleTwc = async () => {
     //src文件下创建index.css文件 添加tailwindcss的引入
     writeFileSync("src/index.css", "@tailwind base;\n@tailwind components;\n@tailwind utilities;")
     console.log(getSuccessText("index.css导入tailwindcss变量成功"))
-    exec("npx tailwindcss init -p", async error => {
+    exec("npx tailwindcss@3 init -p", async error => {
         if (error) {
             console.log(getErrorText(`init tailwindcss文件出错: ${error.message}`))
             return
