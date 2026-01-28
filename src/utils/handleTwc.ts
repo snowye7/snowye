@@ -93,7 +93,7 @@ if (rootEl) {
 
         const installCommand = PackageManagerInstall[packageManager].split(" ")
 
-        const arr = [...installCommand.slice(1), "-D", "tailwindcss", "postcss", "autoprefixer"]
+        const arr = [...installCommand.slice(1), "-D", "tailwindcss@3", "postcss", "autoprefixer"]
 
         if (build === "rsbuild") {
             arr.push("postcss-loader")

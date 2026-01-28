@@ -1,0 +1,35 @@
+name: NPM Publish
+
+on:
+  push:
+    tags:
+      - 'v*' # 触发条件：推送到以 v 开头的 tag 时 (例如 v1.0.0)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # 这一行对于某些 npm publish 配置可能是必要的，但在使用 token 时通常不是必须的，不过加上是个好习惯
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 如果有构建步骤，可以在这里添加，或者依赖 prepublishOnly 脚本
+      - name: Build
+        run: npm run build
+
+      - name: Publish to NPM
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
