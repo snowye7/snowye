@@ -1,6 +1,6 @@
 {
     "name": "snowye",
-    "version": "1.2.38",
+    "version": "1.2.39",
     "description": "",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -12,7 +12,7 @@
         "build": "father build",
         "build:deps": "father prebundle",
         "prepublishOnly": "father doctor && npm run build",
-        "tag":"git push origin $npm_config_version"
+        "tag": "git push origin $npm_config_version"
     },
     "keywords": [],
     "authors": [],
