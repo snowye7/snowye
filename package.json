@@ -11,7 +11,8 @@
         "dev": "father dev",
         "build": "father build",
         "build:deps": "father prebundle",
-        "prepublishOnly": "father doctor && npm run build"
+        "prepublishOnly": "father doctor && npm run build",
+        "tag":"git push origin $npm_config_version"
     },
     "keywords": [],
     "authors": [],
