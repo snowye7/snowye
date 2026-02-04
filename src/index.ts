@@ -9,6 +9,7 @@ import { handlePrettier } from "./utils/handlePrettier"
 import { handleTwp } from "./utils/handleTwp"
 import { handleApf } from "./utils/handleApf"
 import { handleHusky } from "./utils/handleHusky"
+import { handleVscode } from "./utils/handleVscode"
 
 export const primary = "#2472c8"
 
@@ -33,5 +34,7 @@ program.command("tailwindcssPrettier").alias("twp").description(getPrimaryText("
 program.command("addProjectFiles").alias("apf").description(getPrimaryText("🚀-添加项目文件")).action(handleApf)
 
 program.command("husky").description(getPrimaryText("🚀-配置husky和lint-staged")).action(handleHusky)
+
+program.command("vue-prettier").alias("vp").description(getPrimaryText("🚀-生成.vscode/settings.json配置,让prettier接管vue的格式化")).action(handleVscode)
 
 program.parse()

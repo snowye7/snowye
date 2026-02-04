@@ -79,6 +79,7 @@ export function readPackageJson(): Record<string, any> {
 export async function getPackageManager(): Promise<PackageManager> {
     const dir = await readdir("./")
     if (dir.includes("bun.lockb")) return PackageManager.bun
+    if (dir.includes("bun.lock")) return PackageManager.bun
     if (dir.includes("pnpm-lock.yaml")) return PackageManager.pnpm
     if (dir.includes("yarn.lock")) return PackageManager.yarn
     if (dir.includes("package-lock.json")) return PackageManager.npm
