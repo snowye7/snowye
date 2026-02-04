@@ -8,6 +8,7 @@ import { handleExport } from "./utils/handleExport"
 import { handlePrettier } from "./utils/handlePrettier"
 import { handleTwp } from "./utils/handleTwp"
 import { handleApf } from "./utils/handleApf"
+import { handleHusky } from "./utils/handleHusky"
 
 export const primary = "#2472c8"
 
@@ -30,5 +31,7 @@ program.command("tailwindcssConfig").alias("twc").description(getPrimaryText("�
 program.command("tailwindcssPrettier").alias("twp").description(getPrimaryText("🚀-配置prettier文件 包含tailwindcss格式化插件")).action(handleTwp)
 
 program.command("addProjectFiles").alias("apf").description(getPrimaryText("🚀-添加项目文件")).action(handleApf)
+
+program.command("husky").description(getPrimaryText("🚀-配置husky和lint-staged")).action(handleHusky)
 
 program.parse()
