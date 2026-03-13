@@ -1,5 +1,5 @@
 import { exec, spawn } from "child_process"
-import { writeFileSync } from "fs"
+import { existsSync, readFileSync, writeFileSync } from "fs"
 import { getBuildTool, getErrorText, getPackageManager, getSuccessText, PackageManagerInstall } from "."
 
 
@@ -7,8 +7,19 @@ export const handleTwc = async () => {
     const packageManager = await getPackageManager()
     const build = await getBuildTool()
     //src文件下创建index.css文件 添加tailwindcss的引入
-    writeFileSync("src/index.css", "@tailwind base;\n@tailwind components;\n@tailwind utilities;")
-    console.log(getSuccessText("index.css导入tailwindcss变量成功"))
+    const tailwindDirectives = "@tailwind base;\n@tailwind components;\n@tailwind utilities;"
+    const indexPath = "src/index.css"
+
+    if (!existsSync(indexPath)) {
+        writeFileSync(indexPath, tailwindDirectives)
+        console.log(getSuccessText("index.css导入tailwindcss变量成功"))
+    } else {
+        const existingContent = readFileSync(indexPath, "utf-8")
+        if (!existingContent.includes("@tailwind base")) {
+            writeFileSync(indexPath, tailwindDirectives + "\n" + existingContent)
+            console.log(getSuccessText("index.css导入tailwindcss变量成功"))
+        }
+    }
     exec("npx tailwindcss@3.4.17 init -p", async error => {
         if (error) {
             console.log(getErrorText(`init tailwindcss文件出错: ${error.message}`))
@@ -48,9 +59,26 @@ module.exports = {
 
                 `
             )
-            writeFileSync(
-                "src/index.tsx",
-                `
+            const indexTsxPath = "src/index.tsx"
+            if (existsSync(indexTsxPath)) {
+                const indexTsxContent = readFileSync(indexTsxPath, "utf-8")
+                if (!indexTsxContent.includes('"./index.css"') && !indexTsxContent.includes("'./index.css'")) {
+                    const lastImportMatch = indexTsxContent.match(/^import\s+.*$/gm)
+                    const lastImportIndex = lastImportMatch
+                        ? indexTsxContent.lastIndexOf(lastImportMatch[lastImportMatch.length - 1]) +
+                          lastImportMatch[lastImportMatch.length - 1].length
+                        : 0
+                    const newContent =
+                        indexTsxContent.slice(0, lastImportIndex) +
+                        (lastImportIndex > 0 ? "\n" : "") +
+                        'import "./index.css"' +
+                        indexTsxContent.slice(lastImportIndex)
+                    writeFileSync(indexTsxPath, newContent)
+                }
+            } else {
+                writeFileSync(
+                    indexTsxPath,
+                    `
 import React from "react"
 import ReactDOM from "react-dom/client"
 import App from "./App"
@@ -67,7 +95,8 @@ if (rootEl) {
 }
 
                 `
-            )
+                )
+            }
             console.log(getSuccessText("配置rsbuild tailwindcss成功"))
         } else {
             writeFileSync(
